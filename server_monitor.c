@@ -54,6 +54,7 @@ void logHealthStatus(const char* server) {
 // Function to display the menu
 void displayMenu() {
     printf("\nServer Health Monitor\n");
+    printf("\nBy Kevin Marville (https://github.com/kvnbbg)\n");
     printf("1. Monitor Server Health\n");
     printf("2. Set Monitoring Interval\n");
     printf("3. Set Monitoring Duration\n");
