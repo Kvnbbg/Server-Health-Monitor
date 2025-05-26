@@ -73,12 +73,12 @@ New to open source? Here's how to start:
 
 ### Good First Issues:
 - Look for issues tagged `good-first-issue`
-- Join our [community chat](link) to ask questions
+- Join our discord where is the [community chat](https://discord.gg/VTSQM38uZT) to ask questions
 
 ### Setup Guide:
 ```bash
 # Clone repository
-git clone https://github.com/your-project.git
+git clone https://github.com/kvnbbg/your-project.git
 
 # Install dependencies
 npm install
@@ -158,17 +158,17 @@ Keep docs updated:
 
 ## 💬 Communication
 - Be respectful and inclusive
-- Use our [discussion forum](link) for questions
+- Use our discord where is the [discussion forum](https://discord.gg/VTSQM38uZT) for questions
 - Join our monthly contributor calls
 
 ## ⚖️ Code of Conduct
-All contributors must follow our [Code of Conduct](link). We enforce this to maintain a welcoming community.
+All contributors must follow our [Code of Conduct](CODE_OF_CONDUCT.md). We enforce this to maintain a welcoming community.
 
 ## 🙏 Thank You!
 We value every contribution, from bug reports to documentation improvements. Your work makes this project better for everyone!
-```
 
-Key improvements:
+
+## Key improvements:
 1. Added emojis for visual scanning
 2. Better organization with clear sections
 3. More examples and templates
@@ -180,7 +180,7 @@ Key improvements:
 9. Friendlier tone throughout
 10. Added "Your First Contribution" section for newcomers
 
-Would you like me to add any specific details about:
+## Would you like me to add any specific details about:
 - Version control practices?
 - Review process expectations?
 - Continuous integration details?
