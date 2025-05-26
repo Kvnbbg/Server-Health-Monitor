@@ -2,6 +2,14 @@
 
 A simple C program to monitor the health of a server by checking CPU and RAM usage. The program provides a menu-driven interface in the terminal for easy interaction.
 
+
+    Project Purpose & Scope : The project aims to create a basic operating system using C++.
+    Technical Requirements : The project requires C++ programming language, a comprehensive testing and debugging framework, and basic security features.
+    Deployment Environment : The operating system will be deployed on a virtual machine or a physical computer.
+    Existing Code/Systems : There are no legacy systems to integrate with.
+    Testing & Documentation : The project requires a comprehensive testing and debugging framework, detailed documentation, and user guides.
+     
+
 ## Features
 
 - Monitor CPU and RAM usage.
