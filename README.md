@@ -1,80 +1,121 @@
 # Server Health Monitor
 
-A simple C program to monitor the health of a server by checking CPU and RAM usage. The program provides a menu-driven interface in the terminal for easy interaction.
+Server Health Monitor is a small, production-focused C CLI that reports Linux CPU and RAM usage from `/proc`. It ships as a terminal menu monitor and supports a non-interactive mode for scripts or cron jobs.
 
+## Scope
 
-    Project Purpose & Scope : The project aims to create a basic operating system using C++.
-    Technical Requirements : The project requires C++ programming language, a comprehensive testing and debugging framework, and basic security features.
-    Deployment Environment : The operating system will be deployed on a virtual machine or a physical computer.
-    Existing Code/Systems : There are no legacy systems to integrate with.
-    Testing & Documentation : The project requires a comprehensive testing and debugging framework, detailed documentation, and user guides.
-     
+- ✅ **Current**: CPU/RAM usage reporting via a CLI (interactive menu or non-interactive mode).
+- 🚧 **Future**: OS research ideas are listed in the [Roadmap](#roadmap) and are not part of the delivered software.
 
 ## Features
 
-- Monitor CPU and RAM usage.
-- Set custom monitoring intervals and durations.
-- User-friendly terminal interface.
-- Error handling and input validation.
+- Real CPU + memory usage sampling from `/proc`.
+- Interactive menu with clear status output.
+- Non-interactive mode for automation.
+- Configurable interval/duration via flags or environment.
+- Defensive defaults, input validation, and structured errors.
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Linux (uses `/proc/stat` and `/proc/meminfo`).
+- CMake 3.16+
+- GCC/Clang with C11 support.
 
-- A Linux-based operating system.
-- GCC (GNU Compiler Collection) installed.
-
-### Compiling the Program
-
-1. Save the code to a file, for example, `server_monitor.c`.
-2. Open a terminal and navigate to the directory where the file is saved.
-3. Compile the code using the following command:
-
-   ```bash
-   gcc -o server_monitor server_monitor.c
-   ```
-
-### Running the Program
-
-1. After compiling, run the executable with the following command:
-
-   ```bash
-   ./server_monitor
-   ```
-
-2. Follow the on-screen instructions to interact with the program.
-
-## Usage
-
-1. **Monitor Server Health**: Choose this option to start monitoring the server health with the current settings.
-2. **Set Monitoring Interval**: Set the interval (in milliseconds) between monitoring checks.
-3. **Set Monitoring Duration**: Set the total duration (in milliseconds) for monitoring the server.
-4. **Exit**: Exit the program.
-
-## Example
+## Build
 
 ```bash
-Server Health Monitor by Kevin Marville
-GitHub: https://github.com/kvnbbg
-
-Server Health Monitor
-1. Monitor Server Health
-2. Set Monitoring Interval
-3. Set Monitoring Duration
-4. Exit
-Enter your choice: 1
-Monitoring server health...
-Server Health Report for: home
-CPU Usage: 45.67%
-RAM Usage: 34.56% (34.56 GB / 100.00 GB)
-----------------------------------
-Health monitoring completed for server: home
+cmake -S . -B build
+cmake --build build
 ```
+
+### Sanitizers (ASan/UBSan)
+
+```bash
+cmake -S . -B build -DENABLE_SANITIZERS=ON
+cmake --build build
+```
+
+### Static analysis (cppcheck)
+
+```bash
+cmake -S . -B build -DENABLE_CPPCHECK=ON
+cmake --build build
+```
+
+## Run
+
+### Interactive menu
+
+```bash
+./build/server_monitor
+```
+
+### Non-interactive mode
+
+```bash
+./build/server_monitor --non-interactive --interval-ms 1000 --duration-ms 60000
+```
+
+### Run a fixed number of samples
+
+```bash
+./build/server_monitor --non-interactive --iterations 3 --interval-ms 2000
+```
+
+### Environment configuration
+
+```bash
+export SHM_SERVER_NAME=prod-01
+export SHM_INTERVAL_MS=2000
+export SHM_DURATION_MS=120000
+./build/server_monitor
+```
+
+### Help
+
+```bash
+./build/server_monitor --help
+```
+
+## Examples
+
+```text
+Server Health Monitor
+GitHub: https://github.com/kvnbbg
+[INFO] Running in non-interactive mode.
+Server Health Report for: prod-01
+CPU Usage: 12.84%
+RAM Usage: 45.72% (7.30 GB / 15.96 GB)
+----------------------------------
+Health monitoring completed for server: prod-01
+```
+
+## Tests
+
+```bash
+ctest --test-dir build
+```
+
+## Troubleshooting
+
+- **"Failed to read CPU usage"**: Ensure `/proc/stat` is readable. This tool requires Linux.
+- **"Failed to read memory usage"**: Ensure `/proc/meminfo` is readable.
+- **Build warnings as errors**: Disable with `-DENABLE_WERROR=OFF` if needed.
+
+## Security Notes
+
+- No network access is performed.
+- Input parsing is strict to avoid undefined behavior.
+- Prefer running with least privilege; the tool only needs read access to `/proc`.
+
+## Roadmap
+
+These ideas are exploratory and **not** part of the current CLI deliverable:
+
+- OS/kernel experimentation in C++.
+- VM or hardware bootstrapping prototypes.
+- Additional system telemetry modules.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Thanks to the open-source community for providing valuable resources and tools.
+MIT. See [LICENSE](LICENSE).
