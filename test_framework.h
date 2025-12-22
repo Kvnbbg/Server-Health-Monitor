@@ -34,7 +34,7 @@ extern int tests_failed;
 #define RUN_TEST(test) \
     do { \
         printf("Running test: %s\n", test.name); \
-        if (setjmp(test_env) { \
+        if (setjmp(test_env) != 0) { \
             tests_failed++; \
         } else { \
             test.test_func(); \
