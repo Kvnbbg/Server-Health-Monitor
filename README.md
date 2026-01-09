@@ -96,6 +96,40 @@ Health monitoring completed for server: prod-01
 ctest --test-dir build
 ```
 
+## Extra: Manager Audit Pack (Quality Gate)
+
+> “Excellence is not an opinion; it is what survives inspection.”
+
+This optional extra helps non-technical managers validate technician work using evidence:
+- UbuntuBoost output log
+- system snapshot(s)
+- a mandatory change statement
+
+Path:
+- `extras/manager-audit/`
+
+### Technician: generate an evidence bundle
+
+Linux/macOS:
+```bash
+bash extras/manager-audit/make_audit_bundle.sh
+```
+
+Windows:
+```powershell
+powershell -ExecutionPolicy Bypass -File extras/manager-audit/make_audit_bundle.ps1
+```
+
+### Manager: produce a structured audit report
+
+Paste the evidence into:
+- `extras/manager-audit/PROMPT_MANAGER_AUDIT.md`
+
+Ethics:
+- This pack audits work quality and system safety, not personal traits.
+- Do not use it for harassment or discrimination.
+- Redact secrets before sharing logs.
+
 ## Troubleshooting
 
 - **"Failed to read CPU usage"**: Ensure `/proc/stat` is readable. This tool requires Linux.
