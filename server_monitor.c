@@ -24,6 +24,23 @@ static void log_error(const char* message) {
     fprintf(stderr, "[ERROR] %s\n", message);
 }
 
+static bool supports_ansi_output(void) {
+    const char* term = getenv("TERM");
+    if (!term || strcmp(term, "dumb") == 0) {
+        return false;
+    }
+
+    return isatty(STDOUT_FILENO);
+}
+
+static const char* ansi_color(bool enabled, const char* code) {
+    return enabled ? code : "";
+}
+
+static const char* ansi_reset(bool enabled) {
+    return enabled ? "\x1b[0m" : "";
+}
+
 static void print_usage(const char* program) {
     printf("Server Health Monitor\n\n");
     printf("Usage: %s [options]\n\n", program);
@@ -94,18 +111,100 @@ static void sleep_ms(int milliseconds) {
     }
 }
 
-static MonitorStatus log_health_status(const char* server, CpuTracker* tracker) {
-    double cpu_usage = 0.0;
-    MemoryUsage memory = {0};
-    MonitorStatus status = monitor_read_cpu_usage(tracker, &cpu_usage);
+static const char* usage_label(double usage_percent) {
+    const double critical_threshold = 90.0;
+    const double warning_threshold = 75.0;
+
+    if (usage_percent > critical_threshold) {
+        return "CRITICAL";
+    }
+    if (usage_percent > warning_threshold) {
+        return "WARNING";
+    }
+    return "OK";
+}
+
+static void build_usage_bar(char* buffer, size_t buffer_size, double usage_percent, int width) {
+    if (!buffer || buffer_size == 0 || width <= 0) {
+        return;
+    }
+
+    if (usage_percent < 0.0) {
+        usage_percent = 0.0;
+    } else if (usage_percent > 100.0) {
+        usage_percent = 100.0;
+    }
+
+    int filled = (int)((usage_percent / 100.0) * width + 0.5);
+    if (filled < 0) {
+        filled = 0;
+    }
+    if (filled > width) {
+        filled = width;
+    }
+
+    size_t index = 0;
+    for (int i = 0; i < width && index + 1 < buffer_size; i++) {
+        buffer[index++] = (i < filled) ? '#' : '.';
+    }
+    buffer[index] = '\0';
+}
+
+static const char* status_color(bool ansi, const char* label) {
+    if (!ansi) {
+        return "";
+    }
+    if (strcmp(label, "CRITICAL") == 0) {
+        return "\x1b[31m";
+    }
+    if (strcmp(label, "WARNING") == 0) {
+        return "\x1b[33m";
+    }
+    return "\x1b[32m";
+}
+
+static void clear_screen(bool ansi) {
+    if (!ansi) {
+        return;
+    }
+    printf("\x1b[2J\x1b[H");
+}
+
+static MonitorStatus collect_health_snapshot(CpuTracker* tracker, double* cpu_usage, MemoryUsage* memory) {
+    MonitorStatus status = monitor_read_cpu_usage(tracker, cpu_usage);
     if (status != MONITOR_STATUS_OK) {
         log_error("Failed to read CPU usage.");
         return status;
     }
 
-    status = monitor_read_memory_usage(&memory);
+    status = monitor_read_memory_usage(memory);
     if (status != MONITOR_STATUS_OK) {
         log_error("Failed to read memory usage.");
+        return status;
+    }
+
+    return MONITOR_STATUS_OK;
+}
+
+static void log_threshold_messages(double cpu_usage, double memory_usage) {
+    if (cpu_usage > 90.0) {
+        printf("Critical: High CPU usage detected.\n");
+    } else if (cpu_usage > 75.0) {
+        printf("Warning: CPU usage is elevated.\n");
+    }
+
+    if (memory_usage > 90.0) {
+        printf("Critical: High RAM usage detected.\n");
+    } else if (memory_usage > 75.0) {
+        printf("Warning: RAM usage is elevated.\n");
+    }
+}
+
+static MonitorStatus log_health_status(const char* server, CpuTracker* tracker) {
+    double cpu_usage = 0.0;
+    MemoryUsage memory = {0};
+    MonitorStatus status = collect_health_snapshot(tracker, &cpu_usage, &memory);
+    if (status != MONITOR_STATUS_OK) {
         return status;
     }
 
@@ -113,28 +212,83 @@ static MonitorStatus log_health_status(const char* server, CpuTracker* tracker) 
     printf("CPU Usage: %.2f%%\n", cpu_usage);
     printf("RAM Usage: %.2f%% (%.2f GB / %.2f GB)\n", memory.usage_percent, memory.used_gb, memory.total_gb);
 
-    const double critical_threshold = 90.0;
-    const double warning_threshold = 75.0;
-
-    if (cpu_usage > critical_threshold) {
-        printf("Critical: High CPU usage detected.\n");
-    } else if (cpu_usage > warning_threshold) {
-        printf("Warning: CPU usage is elevated.\n");
-    }
-
-    if (memory.usage_percent > critical_threshold) {
-        printf("Critical: High RAM usage detected.\n");
-    } else if (memory.usage_percent > warning_threshold) {
-        printf("Warning: RAM usage is elevated.\n");
-    }
+    log_threshold_messages(cpu_usage, memory.usage_percent);
 
     printf("----------------------------------\n");
     return MONITOR_STATUS_OK;
 }
 
-static MonitorStatus monitor_server_health(const MonitorConfig* config) {
+static void render_live_dashboard(const MonitorConfig* config,
+                                  const char* server,
+                                  double cpu_usage,
+                                  const MemoryUsage* memory,
+                                  long long elapsed_ms,
+                                  long long remaining_ms,
+                                  int sample_index,
+                                  int total_samples,
+                                  bool ansi) {
+    const char spinner_chars[] = {'|', '/', '-', '\\'};
+    char cpu_bar[64] = {0};
+    char mem_bar[64] = {0};
+    const char* cpu_label = usage_label(cpu_usage);
+    const char* mem_label = usage_label(memory->usage_percent);
+    const char* cpu_color = status_color(ansi, cpu_label);
+    const char* mem_color = status_color(ansi, mem_label);
+    const char* header_color = ansi_color(ansi, "\x1b[36m");
+    const char* bold = ansi_color(ansi, "\x1b[1m");
+
+    build_usage_bar(cpu_bar, sizeof(cpu_bar), cpu_usage, 28);
+    build_usage_bar(mem_bar, sizeof(mem_bar), memory->usage_percent, 28);
+
+    clear_screen(ansi);
+
+    printf("%s%sServer Health Monitor%s\n", bold, header_color, ansi_reset(ansi));
+    printf("Server: %s\n", server);
+    if (total_samples > 0) {
+        printf("Sample: %d / %d\n", sample_index, total_samples);
+    } else {
+        printf("Elapsed: %.2fs\n", elapsed_ms / 1000.0);
+    }
+    printf("\n");
+
+    printf("CPU Usage: %s%6.2f%%%s [%s] %s%s%s\n",
+           cpu_color,
+           cpu_usage,
+           ansi_reset(ansi),
+           cpu_bar,
+           cpu_color,
+           cpu_label,
+           ansi_reset(ansi));
+    printf("RAM Usage: %s%6.2f%%%s (%.2f GB / %.2f GB) [%s] %s%s%s\n",
+           mem_color,
+           memory->usage_percent,
+           ansi_reset(ansi),
+           memory->used_gb,
+           memory->total_gb,
+           mem_bar,
+           mem_color,
+           mem_label,
+           ansi_reset(ansi));
+
+    printf("\n");
+    log_threshold_messages(cpu_usage, memory->usage_percent);
+
+    if (remaining_ms >= 0) {
+        printf("\nNext sample in: %.2fs  %c\n",
+               remaining_ms / 1000.0,
+               spinner_chars[sample_index % 4]);
+    }
+    printf("%sSampling every %d ms. Press Ctrl+C to stop early.%s\n",
+           ansi_color(ansi, "\x1b[2m"),
+           config->interval_ms,
+           ansi_reset(ansi));
+    fflush(stdout);
+}
+
+static MonitorStatus monitor_server_health(const MonitorConfig* config, bool live_output) {
     CpuTracker tracker = {0};
     MonitorStatus status = MONITOR_STATUS_OK;
+    const bool ansi = live_output && supports_ansi_output();
 
     if (!config) {
         return MONITOR_STATUS_INVALID_ARGUMENT;
@@ -142,7 +296,26 @@ static MonitorStatus monitor_server_health(const MonitorConfig* config) {
 
     if (config->iterations > 0) {
         for (int i = 0; i < config->iterations; i++) {
-            status = log_health_status(config->server_name, &tracker);
+            if (live_output) {
+                double cpu_usage = 0.0;
+                MemoryUsage memory = {0};
+                long long remaining_ms = (i + 1 < config->iterations) ? config->interval_ms : -1;
+                status = collect_health_snapshot(&tracker, &cpu_usage, &memory);
+                if (status != MONITOR_STATUS_OK) {
+                    return status;
+                }
+                render_live_dashboard(config,
+                                      config->server_name,
+                                      cpu_usage,
+                                      &memory,
+                                      0,
+                                      remaining_ms,
+                                      i + 1,
+                                      config->iterations,
+                                      ansi);
+            } else {
+                status = log_health_status(config->server_name, &tracker);
+            }
             if (status != MONITOR_STATUS_OK) {
                 return status;
             }
@@ -164,7 +337,26 @@ static MonitorStatus monitor_server_health(const MonitorConfig* config) {
             break;
         }
 
-        status = log_health_status(config->server_name, &tracker);
+        if (live_output) {
+            double cpu_usage = 0.0;
+            MemoryUsage memory = {0};
+            long long remaining_ms = config->duration_ms - elapsed;
+            status = collect_health_snapshot(&tracker, &cpu_usage, &memory);
+            if (status != MONITOR_STATUS_OK) {
+                return status;
+            }
+            render_live_dashboard(config,
+                                  config->server_name,
+                                  cpu_usage,
+                                  &memory,
+                                  elapsed,
+                                  remaining_ms,
+                                  (int)(elapsed / config->interval_ms) + 1,
+                                  0,
+                                  ansi);
+        } else {
+            status = log_health_status(config->server_name, &tracker);
+        }
         if (status != MONITOR_STATUS_OK) {
             return status;
         }
@@ -172,7 +364,12 @@ static MonitorStatus monitor_server_health(const MonitorConfig* config) {
         sleep_ms(config->interval_ms);
     }
 
-    printf("Health monitoring completed for server: %s\n", config->server_name);
+    if (live_output) {
+        clear_screen(ansi);
+        printf("Health monitoring completed for server: %s\n", config->server_name);
+    } else {
+        printf("Health monitoring completed for server: %s\n", config->server_name);
+    }
     return MONITOR_STATUS_OK;
 }
 
@@ -213,7 +410,7 @@ int main(int argc, char** argv) {
 
     if (config.non_interactive) {
         log_info("Running in non-interactive mode.");
-        status = monitor_server_health(&config);
+        status = monitor_server_health(&config, false);
         if (status != MONITOR_STATUS_OK) {
             log_error(monitor_status_message(status));
             return EXIT_FAILURE;
@@ -233,7 +430,7 @@ int main(int argc, char** argv) {
         switch (choice) {
             case 1:
                 log_info("Monitoring server health...");
-                status = monitor_server_health(&config);
+                status = monitor_server_health(&config, true);
                 if (status != MONITOR_STATUS_OK) {
                     log_error(monitor_status_message(status));
                 }
