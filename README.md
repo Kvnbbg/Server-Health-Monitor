@@ -96,6 +96,21 @@ Health monitoring completed for server: prod-01
 ctest --test-dir build
 ```
 
+## Agentic workflow reference (static page)
+
+This repository ships a lightweight static page that summarizes agentic workflow practices
+(CLAUDE.md memory, Échap interventions, and parallel sub-agents). The page lives in `docs/`
+and is ready for Vercel deploys.
+
+### Vercel quick deploy
+
+```bash
+vercel --prod
+```
+
+When prompted, set the output directory to `docs` or let Vercel detect it automatically
+from the `vercel.json` configuration.
+
 ## Extra: Manager Audit Pack (Quality Gate)
 
 > “Excellence is not an opinion; it is what survives inspection.”
