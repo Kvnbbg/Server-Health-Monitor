@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server Health Monitor — Agentic Workflow</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">Agentic coding • Vercel-ready</p>
+        <h1>Pratiques recommandées pour un workflow agentique</h1>
+        <p>
+          Ce guide synthétise l'utilisation des fichiers CLAUDE.md, l'intervention en temps réel via la touche Échap,
+          et les sous-agents pour le travail en parallèle. Il s'aligne avec les recommandations d'Anthropic pour des
+          cycles d'itération plus sûrs et plus rapides.
+        </p>
+        <div class="hero-actions">
+          <button class="primary" id="copy-command">Copier la commande Vercel</button>
+          <button class="ghost" id="toggle-highlight">Mode focus</button>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="card">
+          <h2>CLAUDE.md comme mémoire active</h2>
+          <p>
+            Centralisez le contexte du projet, les conventions et les parcours critiques dans un fichier CLAUDE.md.
+            Vous réduisez les pertes d'information et facilitez l'onboarding des nouveaux agents.
+          </p>
+          <ul>
+            <li>Objectifs du projet</li>
+            <li>Commandes principales</li>
+            <li>Guides d'architecture et de sécurité</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Touche Échap pour l'intervention</h2>
+          <p>
+            Gardez un canal d'interruption clair pour ajuster la trajectoire en temps réel, corriger une hypothèse ou
+            réorienter l'exploration.
+          </p>
+          <div class="callout">
+            <span class="dot"></span>
+            <span>Interruption immédiate = réduction du risque</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Sous-agents en parallèle</h2>
+          <p>
+            Distribuez l'analyse entre plusieurs sous-agents pour accélérer la recherche, l'audit de sécurité et la
+            validation UX, tout en conservant un orchestrateur unique.
+          </p>
+          <ul>
+            <li>Audit sécurité dédié</li>
+            <li>Validation QA indépendante</li>
+            <li>Optimisation performance ciblée</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Déploiement Vercel — Mode rapide</h2>
+        <p>
+          Cette page statique est prête à être déployée sur Vercel. L'objectif est de partager rapidement un guide
+          opérationnel pour votre équipe.
+        </p>
+        <div class="command" id="vercel-command">vercel --prod</div>
+        <p class="note">Astuce : connectez le dépôt et laissez Vercel détecter automatiquement le dossier <strong>docs</strong>.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Server Health Monitor • Agentic Workflow Reference</p>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
