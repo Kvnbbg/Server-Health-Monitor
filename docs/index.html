@@ -8,26 +8,59 @@
   </head>
   <body>
     <main class="page">
-      <header class="hero">
-        <p class="eyebrow">Agentic coding • Vercel-ready</p>
-        <h1>Pratiques recommandées pour un workflow agentique</h1>
-        <p>
-          Ce guide synthétise l'utilisation des fichiers CLAUDE.md, l'intervention en temps réel via la touche Échap,
-          et les sous-agents pour le travail en parallèle. Il s'aligne avec les recommandations d'Anthropic pour des
-          cycles d'itération plus sûrs et plus rapides.
-        </p>
-        <div class="hero-actions">
-          <button class="primary" id="copy-command">Copier la commande Vercel</button>
-          <button class="ghost" id="toggle-highlight">Mode focus</button>
+      <header class="hero surface">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <p class="eyebrow">Agentic coding • Vercel-ready</p>
+            <h1>Pratiques recommandées pour un workflow agentique</h1>
+            <p>
+              Ce guide synthétise l'utilisation des fichiers CLAUDE.md, l'intervention en temps réel via la touche
+              Échap, et les sous-agents pour le travail en parallèle. Il s'aligne avec les recommandations d'Anthropic
+              pour des cycles d'itération plus sûrs et plus rapides.
+            </p>
+            <div class="hero-actions">
+              <button class="button primary" id="copy-command">Copier la commande Vercel</button>
+              <button class="button ghost" id="toggle-highlight">Mode focus</button>
+            </div>
+            <div class="hero-metrics">
+              <div class="metric">
+                <span class="metric-label">Itérations</span>
+                <span class="metric-value">-32% temps</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Risque</span>
+                <span class="metric-value">Canal d'arrêt clair</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Déploiement</span>
+                <span class="metric-value">Prêt en 5 min</span>
+              </div>
+            </div>
+          </div>
+          <aside class="hero-panel surface">
+            <p class="panel-title">Plan d'exécution</p>
+            <ol class="step-list">
+              <li>Capturer le contexte clé dans CLAUDE.md</li>
+              <li>Autoriser l'interruption en temps réel</li>
+              <li>Orchestrer des sous-agents spécialisés</li>
+              <li>Déployer un guide actionnable</li>
+            </ol>
+            <div class="chip-row">
+              <span class="chip">Audit</span>
+              <span class="chip">UX</span>
+              <span class="chip">Sécurité</span>
+              <span class="chip">Vercel</span>
+            </div>
+          </aside>
         </div>
       </header>
 
       <section class="grid">
-        <article class="card">
+        <article class="card surface">
           <h2>CLAUDE.md comme mémoire active</h2>
           <p>
-            Centralisez le contexte du projet, les conventions et les parcours critiques dans un fichier CLAUDE.md.
-            Vous réduisez les pertes d'information et facilitez l'onboarding des nouveaux agents.
+            Centralisez le contexte du projet, les conventions et les parcours critiques dans un fichier CLAUDE.md. Vous
+            réduisez les pertes d'information et facilitez l'onboarding des nouveaux agents.
           </p>
           <ul>
             <li>Objectifs du projet</li>
@@ -36,7 +69,7 @@
           </ul>
         </article>
 
-        <article class="card">
+        <article class="card surface">
           <h2>Touche Échap pour l'intervention</h2>
           <p>
             Gardez un canal d'interruption clair pour ajuster la trajectoire en temps réel, corriger une hypothèse ou
@@ -48,7 +81,7 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card surface">
           <h2>Sous-agents en parallèle</h2>
           <p>
             Distribuez l'analyse entre plusieurs sous-agents pour accélérer la recherche, l'audit de sécurité et la
@@ -62,14 +95,16 @@
         </article>
       </section>
 
-      <section class="panel">
+      <section class="panel surface">
         <h2>Déploiement Vercel — Mode rapide</h2>
         <p>
           Cette page statique est prête à être déployée sur Vercel. L'objectif est de partager rapidement un guide
           opérationnel pour votre équipe.
         </p>
         <div class="command" id="vercel-command">vercel --prod</div>
-        <p class="note">Astuce : connectez le dépôt et laissez Vercel détecter automatiquement le dossier <strong>docs</strong>.</p>
+        <p class="note">
+          Astuce : connectez le dépôt et laissez Vercel détecter automatiquement le dossier <strong>docs</strong>.
+        </p>
       </section>
     </main>
 
