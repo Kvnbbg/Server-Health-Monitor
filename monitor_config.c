@@ -1,6 +1,7 @@
 #include "monitor_config.h"
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,18 @@ static void set_error(char* error, size_t error_size, const char* message) {
     if (error != NULL && error_size > 0) {
         snprintf(error, error_size, "%s", message);
     }
+}
+
+static void set_errorf(char* error, size_t error_size, const char* format, ...) {
+    va_list args;
+
+    if (error == NULL || error_size == 0 || format == NULL) {
+        return;
+    }
+
+    va_start(args, format);
+    vsnprintf(error, error_size, format, args);
+    va_end(args);
 }
 
 void monitor_config_init(MonitorConfig* config) {
@@ -72,6 +85,7 @@ MonitorStatus monitor_config_apply_env(MonitorConfig* config, char* error, size_
     int parsed = 0;
     bool flag = false;
     MonitorStatus status = MONITOR_STATUS_OK;
+    const int max_iterations = MONITOR_MAX_ITERATIONS;
 
     if (!config) {
         set_error(error, error_size, "config is null");
@@ -115,7 +129,7 @@ MonitorStatus monitor_config_apply_env(MonitorConfig* config, char* error, size_
 
     value = getenv("SHM_ITERATIONS");
     if (value) {
-        status = parse_int_range(value, 1, MONITOR_MAX_DURATION_MS / MONITOR_MIN_INTERVAL_MS, &parsed);
+        status = parse_int_range(value, 1, max_iterations, &parsed);
         if (status != MONITOR_STATUS_OK) {
             set_error(error, error_size, "invalid SHM_ITERATIONS");
             return status;
@@ -131,6 +145,7 @@ MonitorStatus monitor_config_apply_args(MonitorConfig* config, int argc, char** 
     int i = 1;
     MonitorStatus status = MONITOR_STATUS_OK;
     int parsed = 0;
+    const int max_iterations = MONITOR_MAX_ITERATIONS;
 
     if (!config || !argv || !show_help) {
         set_error(error, error_size, "invalid arguments");
@@ -153,6 +168,10 @@ MonitorStatus monitor_config_apply_args(MonitorConfig* config, int argc, char** 
         if (strcmp(arg, "--server") == 0) {
             if (i + 1 >= argc) {
                 set_error(error, error_size, "--server requires a value");
+                return MONITOR_STATUS_INVALID_ARGUMENT;
+            }
+            if (argv[i + 1][0] == '\0') {
+                set_error(error, error_size, "--server requires a non-empty value");
                 return MONITOR_STATUS_INVALID_ARGUMENT;
             }
             snprintf(config->server_name, sizeof(config->server_name), "%s", argv[i + 1]);
@@ -192,7 +211,7 @@ MonitorStatus monitor_config_apply_args(MonitorConfig* config, int argc, char** 
                 set_error(error, error_size, "--iterations requires a value");
                 return MONITOR_STATUS_INVALID_ARGUMENT;
             }
-            status = parse_int_range(argv[i + 1], 1, MONITOR_MAX_DURATION_MS / MONITOR_MIN_INTERVAL_MS, &parsed);
+            status = parse_int_range(argv[i + 1], 1, max_iterations, &parsed);
             if (status != MONITOR_STATUS_OK) {
                 set_error(error, error_size, "invalid --iterations");
                 return status;
@@ -202,7 +221,7 @@ MonitorStatus monitor_config_apply_args(MonitorConfig* config, int argc, char** 
             continue;
         }
 
-        snprintf(error, error_size, "unknown argument: %s", arg);
+        set_errorf(error, error_size, "unknown argument: %s", arg);
         return MONITOR_STATUS_INVALID_ARGUMENT;
     }
 
