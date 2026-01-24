@@ -1,8 +1,14 @@
 #include "monitor.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
+
+enum {
+    CPU_FIELD_COUNT = 10
+};
+
+static const double KILOBYTES_PER_GIGABYTE = 1024.0 * 1024.0;
+static const double MAX_USAGE_PERCENT = 100.0;
 
 static MonitorStatus read_cpu_fields(unsigned long long* fields, size_t count) {
     FILE* file = fopen("/proc/stat", "r");
@@ -26,8 +32,15 @@ static MonitorStatus read_cpu_fields(unsigned long long* fields, size_t count) {
     return MONITOR_STATUS_OK;
 }
 
+/**
+ * Reads CPU usage as a percentage based on deltas from the previous sample.
+ *
+ * @param tracker CPU tracker storing the previous totals.
+ * @param out_percent Receives the calculated CPU usage percentage.
+ * @return MonitorStatus indicating success or error state.
+ */
 MonitorStatus monitor_read_cpu_usage(CpuTracker* tracker, double* out_percent) {
-    unsigned long long fields[10] = {0};
+    unsigned long long fields[CPU_FIELD_COUNT] = {0};
     unsigned long long total = 0ULL;
     unsigned long long idle = 0ULL;
     MonitorStatus status = MONITOR_STATUS_OK;
@@ -36,18 +49,17 @@ MonitorStatus monitor_read_cpu_usage(CpuTracker* tracker, double* out_percent) {
         return MONITOR_STATUS_INVALID_ARGUMENT;
     }
 
-    status = read_cpu_fields(fields, 10);
+    status = read_cpu_fields(fields, CPU_FIELD_COUNT);
     if (status != MONITOR_STATUS_OK) {
         return status;
     }
 
-    for (size_t i = 0; i < 10; i++) {
+    for (size_t i = 0; i < CPU_FIELD_COUNT; i++) {
         total += fields[i];
     }
     idle = fields[3] + fields[4];
 
     if (!tracker->has_prev) {
-        // First sample initializes the baseline; usage requires a delta.
         tracker->prev_total = total;
         tracker->prev_idle = idle;
         tracker->has_prev = true;
@@ -66,17 +78,23 @@ MonitorStatus monitor_read_cpu_usage(CpuTracker* tracker, double* out_percent) {
         return MONITOR_STATUS_OK;
     }
 
-    *out_percent = (double)(total_delta - idle_delta) * 100.0 / (double)total_delta;
+    *out_percent = (double)(total_delta - idle_delta) * MAX_USAGE_PERCENT / (double)total_delta;
     if (*out_percent < 0.0) {
         *out_percent = 0.0;
     }
-    if (*out_percent > 100.0) {
-        *out_percent = 100.0;
+    if (*out_percent > MAX_USAGE_PERCENT) {
+        *out_percent = MAX_USAGE_PERCENT;
     }
 
     return MONITOR_STATUS_OK;
 }
 
+/**
+ * Reads system memory usage from /proc/meminfo.
+ *
+ * @param usage Receives total, used, and percentage values in gigabytes.
+ * @return MonitorStatus indicating success or error state.
+ */
 MonitorStatus monitor_read_memory_usage(MemoryUsage* usage) {
     FILE* file = NULL;
     char label[64] = {0};
@@ -111,10 +129,13 @@ MonitorStatus monitor_read_memory_usage(MemoryUsage* usage) {
         return MONITOR_STATUS_PARSE_ERROR;
     }
 
-    double total_gb = (double)total_kb / (1024.0 * 1024.0);
-    double available_gb = (double)available_kb / (1024.0 * 1024.0);
+    double total_gb = (double)total_kb / KILOBYTES_PER_GIGABYTE;
+    double available_gb = (double)available_kb / KILOBYTES_PER_GIGABYTE;
+    if (total_gb <= 0.0) {
+        return MONITOR_STATUS_PARSE_ERROR;
+    }
     double used_gb = total_gb - available_gb;
-    double usage_percent = (used_gb / total_gb) * 100.0;
+    double usage_percent = (used_gb / total_gb) * MAX_USAGE_PERCENT;
 
     usage->total_gb = total_gb;
     usage->used_gb = used_gb;
