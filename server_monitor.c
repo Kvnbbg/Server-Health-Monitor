@@ -361,7 +361,19 @@ static MonitorStatus monitor_server_health(const MonitorConfig* config, bool liv
             return status;
         }
 
-        sleep_ms(config->interval_ms);
+        long long after_sample_ms = now_ms();
+        if (after_sample_ms < 0) {
+            return MONITOR_STATUS_INTERNAL_ERROR;
+        }
+        long long remaining_ms = config->duration_ms - (after_sample_ms - start_ms);
+        if (remaining_ms <= 0) {
+            break;
+        }
+        int sleep_duration = config->interval_ms;
+        if (remaining_ms < sleep_duration) {
+            sleep_duration = (int)remaining_ms;
+        }
+        sleep_ms(sleep_duration);
     }
 
     if (live_output) {
