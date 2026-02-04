@@ -135,6 +135,7 @@ MonitorStatus monitor_config_apply_env(MonitorConfig* config, char* error, size_
             return status;
         }
         config->iterations = parsed;
+        config->non_interactive = true;
     }
 
     return MONITOR_STATUS_OK;
@@ -217,6 +218,7 @@ MonitorStatus monitor_config_apply_args(MonitorConfig* config, int argc, char** 
                 return status;
             }
             config->iterations = parsed;
+            config->non_interactive = true;
             i += 2;
             continue;
         }
@@ -254,7 +256,7 @@ MonitorStatus monitor_config_validate(const MonitorConfig* config, char* error, 
         return MONITOR_STATUS_INVALID_ARGUMENT;
     }
 
-    if (config->duration_ms < config->interval_ms) {
+    if (config->iterations == 0 && config->duration_ms < config->interval_ms) {
         set_error(error, error_size, "duration must be >= interval");
         return MONITOR_STATUS_RANGE_ERROR;
     }
