@@ -454,8 +454,12 @@ int main(int argc, char** argv) {
                                            MONITOR_MAX_INTERVAL_MS,
                                            &new_interval);
                 if (status == MONITOR_STATUS_OK) {
-                    config.interval_ms = new_interval;
-                    log_info("Monitoring interval updated.");
+                    if (new_interval > config.duration_ms) {
+                        log_warning("Interval must be <= duration; keeping previous value.");
+                    } else {
+                        config.interval_ms = new_interval;
+                        log_info("Monitoring interval updated.");
+                    }
                 }
                 break;
             }
