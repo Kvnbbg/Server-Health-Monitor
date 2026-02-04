@@ -48,7 +48,7 @@ static void print_usage(const char* program) {
     printf("  --server NAME          Server name to display (default: local)\n");
     printf("  --interval-ms MS       Sampling interval in milliseconds\n");
     printf("  --duration-ms MS       Total monitoring duration in milliseconds\n");
-    printf("  --iterations N         Run N samples (non-interactive only)\n");
+    printf("  --iterations N         Run N samples (implies non-interactive)\n");
     printf("  --non-interactive      Run without the menu (use flags/env)\n");
     printf("  -h, --help             Show this help message\n\n");
     printf("Environment variables:\n");
