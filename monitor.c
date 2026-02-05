@@ -101,6 +101,9 @@ MonitorStatus monitor_read_memory_usage(MemoryUsage* usage) {
     unsigned long long value_kb = 0ULL;
     unsigned long long total_kb = 0ULL;
     unsigned long long available_kb = 0ULL;
+    unsigned long long free_kb = 0ULL;
+    unsigned long long buffers_kb = 0ULL;
+    unsigned long long cached_kb = 0ULL;
 
     if (!usage) {
         return MONITOR_STATUS_INVALID_ARGUMENT;
@@ -116,6 +119,12 @@ MonitorStatus monitor_read_memory_usage(MemoryUsage* usage) {
             total_kb = value_kb;
         } else if (strcmp(label, "MemAvailable:") == 0) {
             available_kb = value_kb;
+        } else if (strcmp(label, "MemFree:") == 0) {
+            free_kb = value_kb;
+        } else if (strcmp(label, "Buffers:") == 0) {
+            buffers_kb = value_kb;
+        } else if (strcmp(label, "Cached:") == 0) {
+            cached_kb = value_kb;
         }
 
         if (total_kb > 0 && available_kb > 0) {
@@ -124,6 +133,10 @@ MonitorStatus monitor_read_memory_usage(MemoryUsage* usage) {
     }
 
     fclose(file);
+
+    if (available_kb == 0 && (free_kb > 0 || buffers_kb > 0 || cached_kb > 0)) {
+        available_kb = free_kb + buffers_kb + cached_kb;
+    }
 
     if (total_kb == 0 || available_kb == 0 || available_kb > total_kb) {
         return MONITOR_STATUS_PARSE_ERROR;
